@@ -1,39 +1,72 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ENGINEERING PROJECT BOARD</title>
-<style>
-body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif}
-.header{display:flex;justify-content:space-between;padding:20px;background:#000;border-bottom:2px solid #f5c542}
-.title{font-size:42px;color:#f5c542;font-weight:bold}
-.subtitle{font-size:24px}
-#clock{font-size:34px;color:#f5c542}
-table{width:100%;border-collapse:collapse}
-th,td{padding:16px;border:1px solid #223;text-align:center}
-th{background:#0d1b2a;color:#f5c542}
-tr:nth-child(even){background:#0f2238}
-.status-green{color:#3ddb67;font-weight:bold}
-.status-yellow{color:#ffd43b;font-weight:bold}
-.status-red{color:#ff4d4d;font-weight:bold}
-.scroll{height:75vh;overflow:hidden}
-tbody{animation: scroll 20s linear infinite}
-@keyframes scroll {0%{transform:translateY(0)}100%{transform:translateY(-40%)}}
-.footer{padding:10px;background:#000;color:#f5c542}
-</style>
-</head>
-<body>
-<div class="header"><div><div class="title">ENGINEERING PROJECT BOARD</div><div class="subtitle">جدول أعمال المشروع</div></div><div id="clock"></div></div>
-<div class="scroll"><table><thead><tr><th>الوقت</th><th>المهمة</th><th>المسؤول</th><th>الحالة</th><th>الموقع</th></tr></thead>
-<tbody>
-<tr><td>08:00</td><td>اجتماع المشروع</td><td>أحمد</td><td class="status-green">ON TIME</td><td>المكتب</td></tr>
-<tr><td>10:00</td><td>مراجعة المخططات</td><td>خالد</td><td class="status-yellow">IN PROGRESS</td><td>الموقع</td></tr>
-<tr><td>13:00</td><td>توريد المواد</td><td>سعيد</td><td class="status-red">DELAYED</td><td>المستودع</td></tr>
-<tr><td>15:00</td><td>فحص الجودة</td><td>المهندس</td><td class="status-green">ON TIME</td><td>الموقع</td></tr>
-</tbody></table></div>
-<div class="footer">Airport Style Display</div>
-<script>
-function updateClock(){const n=new Date();document.getElementById('clock').innerHTML=n.toLocaleDateString()+'<br>'+n.toLocaleTimeString();}
-setInterval(updateClock,1000);updateClock();
-</script></body></html>
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.drawing.image import Image
+from openpyxl.utils import get_column_letter
+from pathlib import Path
+
+wb=Workbook()
+ws=wb.active
+ws.title="Snag List"
+
+# Logo
+img=Image("/mnt/data/3.png")
+img.width=240; img.height=90
+ws.add_image(img,"A1")
+
+ws.merge_cells("C1:H3")
+t=ws["C1"]
+t.value="MAB CONSULT - SNAG LIST FOR ALL BLOCKS"
+t.font=Font(size=20,bold=True,color="F5C542")
+t.fill=PatternFill("solid", fgColor="07111F")
+t.alignment=Alignment(horizontal="center", vertical="center")
+
+ws["J1"]="Total Snag"; ws["K1"]=326
+ws["J2"]="Total Hold"; ws["K2"]=234
+for c in ["J1","J2","K1","K2"]:
+    ws[c].fill=PatternFill("solid", fgColor="07111F")
+    ws[c].font=Font(color="F5C542", bold=True)
+    ws[c].alignment=Alignment(horizontal="center")
+
+headers=["Block","Location","Total Snag","Snag Done","Tilal Status","Condition","Completion Rate"]
+ws.append([])
+ws.append([])
+ws.append([])
+ws.append(headers)
+data=[
+["BLACK 2","B3",30,30,"ALL DONE","COMPLETED","100%"],
+["BLACK 2","B4",30,30,"ALL DONE","COMPLETED","100%"],
+["BLACK 2","C4",28,28,"ALL DONE","COMPLETED","100%"],
+["BLACK 2","C3",28,28,"ALL DONE","COMPLETED","100%"],
+["BLACK 1","C1",28,28,"ALL DONE","COMPLETED","100%"],
+["BLACK 4","A4",28,28,"ALL DONE","COMPLETED","100%"],
+["BLACK 4","A6",26,14,"14 DONE","IN PROGRESS","75%"],
+["BLACK 1","B2",29,28,"28 DONE","IN PROGRESS","98%"],
+["BLACK 1","C2",28,20,"20 DONE","IN PROGRESS","88%"],
+["BLACK 4","C8",12,0,"NO","NOT READY","0%"],
+["BLACK 3","C5",20,0,"NO","NOT READY","0%"],
+["BLACK 4","A5",24,0,"NO","NOT READY","0%"],
+["BLACK 1","B1",15,0,"NO","NOT READY","0%"],
+]
+for r in data: ws.append(r)
+header_row=5
+for cell in ws[header_row]:
+    cell.fill=PatternFill("solid", fgColor="07111F")
+    cell.font=Font(color="F5C542", bold=True)
+    cell.alignment=Alignment(horizontal="center")
+thin=Side(style="thin", color="FFFFFF")
+for row in ws.iter_rows(min_row=6,max_row=18):
+    for c in row:
+        c.border=Border(left=thin,right=thin,top=thin,bottom=thin)
+        c.alignment=Alignment(horizontal="center")
+        if c.column==6:
+            if c.value=="COMPLETED":
+                c.fill=PatternFill("solid", fgColor="00C853")
+            elif c.value=="IN PROGRESS":
+                c.fill=PatternFill("solid", fgColor="FFD600")
+            elif c.value=="NOT READY":
+                c.fill=PatternFill("solid", fgColor="FF5252")
+for i in range(1,12):
+    ws.column_dimensions[get_column_letter(i)].width=20
+path=Path("/mnt/data/MAB_Snag_List_Professional.xlsx")
+wb.save(path)
+print(path)
